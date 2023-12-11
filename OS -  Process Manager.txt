@@ -1,0 +1,391 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+void FCFS()
+{
+    struct process
+    {
+        int id, wait, ser, tottime;
+    }
+    p[20];
+    int i, n, j, totalwait = 0, totalser = 0, avturn, avwait;
+    printf("enter number of process");
+    scanf("%d", &n);
+    for (i = 1; i <= n; i++)
+    {
+        printf("enter process_id");
+        scanf("%d", &p[i].id);
+        printf("enter process service time");
+        scanf("%d", &p[i].ser);
+        p[1].wait = 0;
+        p[1].tottime = p[1].ser;
+        for (i = 2; i <= n; i++)
+        {
+            for (j = 1; j < i; j++)
+            {
+                p[i].wait = p[i].wait + p[j].ser;
+            }
+            totalwait = totalwait + p[i].wait;
+            p[i].tottime = p[i].wait + p[i].ser;
+            totalser = totalser + p[i].tottime;
+        }
+        avturn = totalser / n;
+        avwait = totalwait / n;
+        printf("Id\tservice\twait\ttotal");
+        for (i = 1; i <= n; i++)
+        {
+            printf("\n%d\t%d\t%d\t%d\n", p[i].id, p[i].ser, p[i].wait, p[i].tottime);
+        }
+        printf("average waiting time %d\n", avwait);
+        printf("average turnaround time %d\n", avturn);
+    }
+}
+void SJF()
+{
+    struct ff
+    {
+        int pid, ser, wait;
+    }
+    p[20];
+    struct ff tmp;
+    int i, n, j, tot = 0, avwait, totwait = 0, tturn = 0, aturn;
+    printf("enter the number of process");
+    scanf("%d", &n);
+    for (i = 0; i < n; i++)
+    {
+        printf("enter process id");
+        scanf("%d", &p[i]);
+        printf("enter service time");
+        scanf("%d", &p[i].ser);
+        p[i].wait = 0;
+    }
+    for (i = 0; i < n - 1; i++)
+    {
+        for (j = i + 1; j < n; j++)
+        {
+            if (p[i].ser > p[j].ser)
+            {
+                tmp = p[i];
+                p[i] = p[j];
+                p[j] = tmp;
+            }
+        }
+    }
+    printf("PID\tSER\tWAIT\tTOT\n");
+    for (i = 0; i < n; i++)
+    {
+        tot = tot + p[i].ser;
+        tturn = tturn + tot;
+        p[i + 1].wait = tot;
+        totwait = totwait + p[i].wait;
+        printf("%d\t%d\t%d\t%d\n", p[i].pid, p[i].ser, p[i].wait, tot);
+    }
+    avwait = totwait / n;
+    aturn = tturn / n;
+    printf("TOTAL WAITING TIME:%d\n", totwait);
+    printf("AVERAGE WAITING TIME: %d\n", avwait);
+    printf("TOTAL TURNAROUND TIME:%d\n", tturn);
+    printf("AVERAGE TURNAROUND TIME:%d\n", aturn);
+
+}
+void priorityScheduling()
+{
+    int bt[20], p[20], wt[20], tat[20], pr[20], i, j, n, total = 0, pos, temp, avg_wt, avg_tat;
+    printf("Enter Total Number of Process:");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++)
+    {
+        printf("Enter Burst Time and Priority of the Process[%d]", i + 1);
+        printf("\nBurst Time:");
+        scanf("%d", &bt[i]);
+        printf("Priority:");
+        scanf("%d", &pr[i]);
+        p[i] = i + 1;
+    }
+    for (i = 0; i < n; i++)
+    {
+        pos = i;
+        for (j = i + 1; j < n; j++)
+        {
+            if (pr[j] < pr[pos])
+                pos = j;
+        }
+
+        temp = pr[i];
+        pr[i] = pr[pos];
+        pr[pos] = temp;
+
+        temp = bt[i];
+        bt[i] = bt[pos];
+        bt[pos] = temp;
+
+        temp = p[i];
+        p[i] = p[pos];
+        p[pos] = temp;
+    }
+    wt[0] = 0;
+    for (i = 1; i < n; i++)
+    {
+        wt[i] = 0;
+        for (j = 0; j < i; j++)
+            wt[i] += bt[j];
+
+        total += wt[i];
+    }
+    avg_wt = total / n;
+    total = 0;
+    printf("\nProcess\t    Burst Time    \tWaiting Time\tTurnaround Time");
+    for (i = 0; i < n; i++)
+    {
+        tat[i] = bt[i] + wt[i];
+        total += tat[i];
+        printf("\nP[%d]\t\t  %d\t\t    %d\t\t\t%d", p[i], bt[i], wt[i], tat[i]);
+    }
+    avg_tat = total / n;
+    printf("\n\nAverage Waiting Time=%d", avg_wt);
+    printf("\nAverage Turnaround Time=%d\n", avg_tat);
+
+}
+void roundRobin()
+{
+    int i, NumberOfProcesses, sum = 0, count = 0, y, sliceTime, wt = 0, tat = 0, at[10], bt[10], temp[10];
+    float avgWaitingTime, avgTurnAroundTime;
+    printf(" Total number of process in the system: ");
+    scanf("%d", &NumberOfProcesses);
+    y = NumberOfProcesses;
+    for (i = 0; i < NumberOfProcesses; i++)
+    {
+        printf("Enter the Arrival and Burst time of the Process[%d]", i + 1);
+        printf("\nArrival time is:");
+        scanf("%d", &at[i]);
+        printf("Burst time is:");
+        scanf("%d", &bt[i]);
+        temp[i] = bt[i];
+    }
+    printf("Enter the Slice time for the process:");
+    scanf("%d", &sliceTime);
+    printf("\n Process No \t\t Burst Time \t\t TAT \t\t Waiting Time ");
+    for (sum = 0, i = 0; y != 0; )
+    {
+        if (temp[i] <= sliceTime && temp[i] > 0)
+        {
+            sum = sum + temp[i];
+            temp[i] = 0;
+            count = 1;
+        }
+        else if (temp[i] > 0)
+        {
+            temp[i] = temp[i] - sliceTime;
+            sum = sum + sliceTime;
+        }
+        if (temp[i] == 0 && count == 1)
+        {
+            y--;
+            printf("\nProcess No[%d] \t\t %d\t\t\t\t %d\t\t\t %d", i + 1, bt[i], sum - at[i], sum - at[i] - bt[i]);
+            wt = wt + sum - at[i] - bt[i];
+            tat = tat + sum - at[i];
+            count = 0;
+        }
+        if (i == NumberOfProcesses - 1)
+        {
+            i = 0;
+        }
+        else if (at[i + 1] <= sum)
+        {
+            i++;
+        }
+        else
+        {
+            i = 0;
+        }
+    }
+    printf("\n");
+    avgWaitingTime = wt * 1.0 / NumberOfProcesses;
+    avgTurnAroundTime = tat * 1.0 / NumberOfProcesses;
+    printf("\n Average Turn Around Time: \t%f", avgWaitingTime);
+    printf("\n Average Waiting Time: \t%f", avgTurnAroundTime);
+    printf("\n");
+}
+
+void createNewPagingProcess()
+{
+
+    int b[20], n, i, pa, p, a, d, t;
+    printf("\nProgram for paging");
+    printf("\nEnter the number of pages:");
+    scanf("%d", &n);
+    printf("\nEnter the base address:");
+    for (i = 0; i < n; i++)
+    {
+        scanf("%d", &b[i]);
+    }
+    printf("\nEnter the logical address:");
+    scanf("%d", &p);
+    for (i = 0; i < n; i++)
+    {
+        if (i == p)
+        {
+            pa = b[i] + d;
+            a = b[i];
+            printf("\n\tPageNo.\t BaseAdd. PhysicalAdd. \n\t %d \t %d \t %d \t", p, a, pa);
+        }
+    }
+    printf("\nInvalid page");
+}
+
+
+void createNewSegmentationProcess()
+{
+    int b[20], l[20], n, i, pa, s, a, d;
+    printf("\nProgram for segmentation");
+    printf("\nEnter the number of segments:");
+    scanf("%d", &n);
+    printf("\nEnter the base address and limit register:");
+    for (i = 0; i < n; i++)
+    {
+        scanf("%d", &b[i]);
+        scanf("%d", &l[i]);
+    }
+    printf("\nEnter the logical address:");
+    scanf("%d", &d);
+    printf("\nEnter the segment number:");
+    scanf("%d", &s);
+    for (i = 0; i < n; i++)
+    {
+        if (i == s)
+        {
+            if (d < l[i])
+            {
+                pa = b[i] + d;
+                a = b[i];
+                printf("\n\tPageNo.\t BaseAdd. PhysicalAdd. \n\t %d \t %d \t %d \t ", s, a, pa);
+            }
+            else
+            {
+                printf("\nPage size exceeds");
+            }
+        }
+    }
+    printf("\nInvalid segment");
+
+}
+void compileCppFileBySystemCallExplicitly()
+{
+    printf("Using system call to show directories\n\n\n\n");
+    system("ls");
+    printf("Using system call to compile another program\n\n\n\n");
+    if (system(NULL))
+    {
+        printf("Command processor exists");
+        char* str = malloc(256);
+        printf("\n");
+        printf("System process to compile another cpp file thorugh gcc (system call) ");
+        printf("\n");
+        char* command = "g++ -o a.out a.cpp";
+        printf("Compiling file using ", command);
+        system(command); // system call
+        printf("\nRunning file \n ");
+        system("./a.out"); // system call
+    }
+    else
+    {
+        printf("Command processor doesn't exists\n");
+    }
+}
+void viewSystemCurrentProcesses()
+{
+    int p = system("cat /proc/1/status");
+}
+int main()
+{
+    char ch;
+    do
+    {
+        printf("1- Do you want to invoke system process through system call ?\n");
+        printf("2- Do you want to create new user process ?\n");
+        printf("3- View current System processes\n");
+        printf("4- Delete/kill system process\n");
+        printf("5- Do you want to perfrom process Scheduling\n");
+        int choice;
+        int pid;
+        scanf("%d", &choice);
+        switch (choice)
+        {
+        case 1:
+        {
+            compileCppFileBySystemCallExplicitly();
+            break;
+        }
+        case 2:
+        {
+            printf("1- Create Paging user process\n");
+            printf("2- Create Segmentation user process\n");
+            printf("3- Exit\n");
+            int choice2;
+            scanf("%d", &choice2);
+            if (choice2 == 1)
+            {
+                createNewPagingProcess();
+                break;
+            }
+            else if (choice2 == 2)
+            {
+                createNewSegmentationProcess();
+                break;
+            }
+            else
+            {
+                exit(1);
+            }
+            break;
+        }
+        case 3:
+        {
+            viewSystemCurrentProcesses();
+            break;
+        }
+        case 4:
+        {
+            viewSystemCurrentProcesses();
+            scanf("%d", &pid);
+            kill(pid, SIGKILL);
+            printf("Process killed with pid : ", pid);
+            break;
+        }
+        case 5:
+        {
+            printf("Which Scheduling Algorithm you want to use:\n");
+            printf("1- FCFS\n");
+            printf("2- SJF\n");
+            printf("3- Priority Scheduling\n");
+            printf("4- Round Robin\n");
+            int choice3;
+            scanf("%d", &choice3);
+            if (choice3 == 1)
+            {
+                FCFS();
+            }
+            else if (choice3 == 2)
+            {
+                SJF();
+            }
+            else if (choice3 == 3)
+            {
+                priorityScheduling();
+            }
+            else if (choice3 == 4)
+            {
+                roundRobin();
+            }
+        }
+        default:
+            break;
+        }
+        printf("Do you want to perform another task? y/n\n");
+        scanf("%d", &ch);
+    } while (ch=='y'|| ch=='Y');
+   
+    return 0;
+}
